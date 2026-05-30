@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pave Push Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            background:
+                linear-gradient(135deg, rgba(255, 193, 7, 0.08) 25%, transparent 25%) -20px 0 / 40px 40px,
+                linear-gradient(225deg, rgba(255, 193, 7, 0.08) 25%, transparent 25%) -20px 0 / 40px 40px,
+                linear-gradient(315deg, rgba(74, 111, 165, 0.06) 25%, transparent 25%) 0 0 / 40px 40px,
+                linear-gradient(45deg, rgba(74, 111, 165, 0.06) 25%, transparent 25%) 0 0 / 40px 40px,
+                linear-gradient(180deg, #e8eef5 0%, #d4dce8 40%, #c5d0e0 100%);
+            color: #2c3e50;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(44, 62, 80, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(44, 62, 80, 0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 740px;
+            width: 100%;
+            background: linear-gradient(165deg, #ffffff 0%, #f4f7fb 100%);
+            border: 3px solid #4a6fa5;
+            border-radius: 4px 4px 20px 20px;
+            padding: 44px 40px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            box-shadow:
+                0 0 0 4px #ffc107,
+                0 20px 48px rgba(44, 62, 80, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: repeating-linear-gradient(
+                -45deg,
+                #ffc107,
+                #ffc107 12px,
+                #2c3e50 12px,
+                #2c3e50 24px
+            );
+            border-radius: 2px 2px 0 0;
+        }
+
+        .icon-wrap {
+            width: 116px;
+            height: 116px;
+            margin: 16px auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #5a7fb8 0%, #4a6fa5 50%, #3d5f8a 100%);
+            box-shadow:
+                0 14px 32px rgba(74, 111, 165, 0.4),
+                inset 0 2px 0 rgba(255, 255, 255, 0.2);
+            border: 3px solid #ffc107;
+            transform: perspective(400px) rotateX(8deg);
+        }
+
+        .icon-wrap svg {
+            width: 76px;
+            height: 76px;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 8px;
+            color: #1a2836;
+        }
+
+        h1 span.accent {
+            color: #e67e22;
+        }
+
+        .tagline {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #4a6fa5;
+            margin-bottom: 24px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 26px;
+        }
+
+        .chip {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 8px 14px;
+            border-radius: 4px;
+            background: #fff8e1;
+            color: #5d4e37;
+            border: 2px solid #ffc107;
+        }
+
+        .chip.steel {
+            background: #e8eef5;
+            color: #3d5f8a;
+            border-color: #4a6fa5;
+        }
+
+        .lead {
+            text-align: left;
+            color: #4a5f6f;
+            line-height: 1.75;
+            font-size: 1.05rem;
+            margin-bottom: 28px;
+        }
+
+        .lead strong {
+            color: #1a2836;
+        }
+
+        .site-preview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .site-card {
+            padding: 22px 18px;
+            border-radius: 8px;
+            text-align: left;
+            border: 2px solid;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .site-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .site-card.grid {
+            background: linear-gradient(160deg, #eef3f9 0%, #dce6f2 100%);
+            border-color: #4a6fa5;
+            box-shadow: 0 8px 20px rgba(74, 111, 165, 0.15);
+        }
+
+        .site-card.loader {
+            background: linear-gradient(160deg, #fff8e1 0%, #ffe082 100%);
+            border-color: #e67e22;
+            box-shadow: 0 8px 20px rgba(230, 126, 34, 0.15);
+        }
+
+        .site-card .emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .site-card h3 {
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+
+        .site-card.grid h3 {
+            color: #3d5f8a;
+        }
+
+        .site-card.loader h3 {
+            color: #c0392b;
+        }
+
+        .site-card p {
+            font-size: 0.84rem;
+            color: #4a5f6f;
+            line-height: 1.5;
+        }
+
+        .how-to {
+            text-align: left;
+            margin-bottom: 28px;
+            padding: 24px 26px;
+            border-radius: 8px;
+            background: #f4f7fb;
+            border-left: 6px solid #ffc107;
+            border-top: 1px solid rgba(74, 111, 165, 0.2);
+            border-right: 1px solid rgba(74, 111, 165, 0.2);
+            border-bottom: 1px solid rgba(74, 111, 165, 0.2);
+        }
+
+        .how-to h2 {
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #e67e22;
+            margin-bottom: 14px;
+        }
+
+        .how-to ol {
+            margin: 0;
+            padding-left: 20px;
+            color: #4a5f6f;
+            font-size: 0.93rem;
+            line-height: 1.65;
+        }
+
+        .how-to li {
+            margin-bottom: 8px;
+        }
+
+        .how-to li strong {
+            color: #1a2836;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            text-align: left;
+            margin-bottom: 28px;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            border: 2px solid rgba(74, 111, 165, 0.2);
+            border-radius: 8px;
+            padding: 18px 16px;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: #ffc107;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(44, 62, 80, 0.12);
+        }
+
+        .feature-card h3 {
+            font-size: 0.84rem;
+            color: #4a6fa5;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .feature-card p {
+            font-size: 0.87rem;
+            color: #4a5f6f;
+            line-height: 1.55;
+        }
+
+        .cta {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 16px 36px;
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: #1a2836;
+            text-decoration: none;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #ffc107 0%, #f39c12 100%);
+            box-shadow: 0 8px 24px rgba(243, 156, 18, 0.4);
+            border: 2px solid #e67e22;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(243, 156, 18, 0.5);
+        }
+
+        .foot {
+            margin-top: 26px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(74, 111, 165, 0.15);
+            font-size: 0.88rem;
+            color: #6a7f8f;
+        }
+
+        .foot a {
+            color: #4a6fa5;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .foot a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 560px) {
+            .site-preview {
+                grid-template-columns: 1fr;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 36px 22px;
+            }
+            h1 {
+                font-size: 1.7rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-overlay" aria-hidden="true"></div>
+
+    <div class="container">
+        <div class="icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M8 48 L56 48 L56 56 L8 56 Z" fill="#95a5a6"/>
+                <path d="M12 40 L52 40 L48 48 L16 48 Z" fill="#bdc3c7"/>
+                <rect x="20" y="28" width="24" height="12" fill="#e67e22" rx="2"/>
+                <rect x="24" y="20" width="16" height="8" fill="#f39c12" rx="1"/>
+                <path d="M16 32 L12 40 L20 40 Z" fill="#4a6fa5"/>
+                <path d="M48 32 L52 40 L44 40 Z" fill="#4a6fa5"/>
+                <ellipse cx="32" cy="14" rx="14" ry="6" fill="#ffc107"/>
+                <path d="M22 14 L26 8 L38 8 L42 14 Z" fill="#f39c12"/>
+            </svg>
+        </div>
+
+        <h1>Pave Push <span class="accent">Puzzle</span></h1>
+        <p class="tagline">Roll · paint · pave the site</p>
+
+        <div class="chips">
+            <span class="chip">Free</span>
+            <span class="chip">iOS 15+</span>
+            <span class="chip">Casual</span>
+            <span class="chip steel">iPhone &amp; iPad</span>
+        </div>
+
+        <p class="lead">
+            <strong>Put on your hard hat and master the grid.</strong> Pave Push Puzzle is a construction-themed isometric logic game. Drive a loader across complex sites, roll heavy blocks into place, and paint the right faces before you run out of moves or time. Tight corners, site obstacles, and strict objectives turn every layout into a brain-teasing shift.
+        </p>
+
+        <div class="site-preview">
+            <div class="site-card grid">
+                <div class="emoji" aria-hidden="true">🏗️</div>
+                <h3>Grid sites</h3>
+                <p>Navigate low-poly isometric yards filled with trucks, materials, and tricky tile layouts. Plan each route before you commit.</p>
+            </div>
+            <div class="site-card loader">
+                <div class="emoji" aria-hidden="true">🚜</div>
+                <h3>Loader control</h3>
+                <p>Maneuver your vehicle to push blocks across the board, meet paint objectives, and reach the finish tile to clear the job.</p>
+            </div>
+        </div>
+
+        <section class="how-to">
+            <h2>How to play</h2>
+            <ol>
+                <li><strong>Survey the site</strong> — Study the grid, obstacles, and what each block must look like when the job is done.</li>
+                <li><strong>Roll and paint</strong> — Push blocks along paths so the correct sides get painted while you conserve moves.</li>
+                <li><strong>Beat the limit</strong> — Finish objectives and hit the exit before moves or the clock run out.</li>
+                <li><strong>Deploy power-ups</strong> — Use special tools to escape dead ends, protect progress, and complete tough layouts.</li>
+            </ol>
+        </section>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Brain-teasing layouts</h3>
+                <p>Tight corners and site obstacles demand careful planning on every stage.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Paint objectives</h3>
+                <p>Roll blocks so specific sides are painted within strict move budgets.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Strategic power-ups</h3>
+                <p>Tools help you recover from tight spots and finish jobs efficiently.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Isometric world</h3>
+                <p>Colorful low-poly sites with loaders, trucks, and construction props.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Move &amp; time pressure</h3>
+                <p>Stages challenge you with move limits, timers, or both—stay sharp.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Pick-up &amp; play</h3>
+                <p>Clear logic rules and short sessions—ideal for quick puzzle breaks.</p>
+            </div>
+        </div>
+
+        <a href="https://apps.apple.com/us/app/pave-push-puzzle/id6768535390?uo=4" class="cta" target="_blank" rel="noopener noreferrer">Download on the App Store</a>
+
+        <div class="foot">
+            <a href="privacy.html">Privacy overview</a>
+        </div>
+    </div>
+</body>
+
+</html>
